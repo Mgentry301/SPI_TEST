@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include <SPI.h>
 #include <stddef.h>
 
 // Simple SPI bring-up for ADMV1455, ADMV1355, or AD9082 in minimal mode.
