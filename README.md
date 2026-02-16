@@ -84,6 +84,81 @@ Scratchpad write/readback: VALID (if no [MISMATCH])
 Setup complete.
 ```
 
+## Preset Examples
+
+### ADMV1455_MINIMAL
+
+```
+SPI_TEST: Minimal SPI Bring-up
+Preset: ADMV1455_MINIMAL
+Preset applied: ADMV1455_MINIMAL
+SPI Hz: 1000000
+SPI Mode: 0
+CHIP_ADDR: 0
+CS pin: 10
+...
+Reading a few registers:
+  reg 0x000 = 0x..
+  reg 0x005 = 0x..
+  reg 0x012 = 0x..
+  reg 0x040 = 0x..
+  reg 0x050 = 0x..
+Register readback status: VALID
+Write/readback test on scratchpad register:
+  reg 0x00A write 0x5A read 0x5A
+  reg 0x00A write 0xA5 read 0xA5
+Scratchpad write/readback: VALID (if no [MISMATCH])
+Setup complete.
+```
+
+### ADMV1355_MINIMAL
+
+```
+SPI_TEST: Minimal SPI Bring-up
+Preset: ADMV1355_MINIMAL
+Preset applied: ADMV1355_MINIMAL
+SPI Hz: 1000000
+SPI Mode: 0
+CHIP_ADDR: 0
+CS pin: 10
+...
+Reading a few registers:
+  reg 0x000 = 0x..
+  reg 0x001 = 0x..
+  reg 0x003 = 0x..
+  reg 0x004 = 0x..
+  reg 0x005 = 0x..
+Register readback status: VALID
+Write/readback test on scratchpad register:
+  reg 0x00A write 0x5A read 0x5A
+  reg 0x00A write 0xA5 read 0xA5
+Scratchpad write/readback: VALID (if no [MISMATCH])
+Setup complete.
+```
+
+### AD9082_MINIMAL
+
+```
+SPI_TEST: Minimal SPI Bring-up
+Preset: AD9082_MINIMAL
+Preset applied: AD9082_MINIMAL
+SPI Hz: 1000000
+SPI Mode: 0
+CHIP_ADDR: 0
+CS pin: 10
+...
+Reading a few registers:
+  reg 0x0000 = 0x..
+  reg 0x0001 = 0x..
+  reg 0x0002 = 0x..
+  reg 0x0003 = 0x..
+Register readback status: VALID
+Write/readback test on SPI config register:
+  reg 0x0000 write 0x.. read 0x..
+SPI config write/readback status: VALID
+Setup complete.
+```
+
 ## Notes
 
 - If reads return 0xFF or 0x00 consistently, check power, MUX pin, and SPI wiring.
