@@ -15,15 +15,16 @@ This sketch is intentionally simple and only verifies SPI wiring, chip select, a
 
 ### QuikEval SPI Pinout
 
-| Signal | QuikEval Pin | Linduino Pin | Arduino Pin |
-|--------|--------------|--------------|-------------|
-| CS     | 6            | SS           | 10          |
-| MOSI   | 4            | MOSI         | 11          |
-| MISO   | 1            | MISO         | 12          |
-| SCK    | 3            | SCK          | 13          |
-| GND    | 2, 9         | GND          | GND         |
+| Signal | QuikEval Pin (J1) | Linduino Pin | Arduino Pin |
+|--------|-------------------|--------------|-------------|
+| SCK    | 4 (SCK/SCL)       | SCK          | 13          |
+| MOSI   | 7 (MOSI/SDA)      | MOSI         | 11          |
+| MISO   | 5                 | MISO         | 12          |
+| CS     | 6                 | SS           | 10          |
+| GPIO   | 14                | GPIO         | 9           |
+| GND    | 3, 8, 13          | GND          | GND         |
 
-Note: The MUX pin on the QuikEval connector must be LOW for SPI mode.
+Note: The QuikEval MUX pin (Linduino D8) must be LOW for SPI mode. The sketch drives it LOW in setup.
 
 ## Files
 
