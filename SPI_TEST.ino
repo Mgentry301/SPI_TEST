@@ -7,10 +7,134 @@
 #include <Arduino.h>
 #include <SPI.h>
 #include <Linduino.h>
+#include <ctype.h>
 
 #include "spi_test_config.h"
 #include "spi_test_spi.h"
 #include "spi_test_utils.h"
+
+static bool g_poll_enabled = true;
+
+static void print_help() {
+  Serial.println("\nCommands:");
+  Serial.println("  help                 - show this help");
+  Serial.println("  r <addr>             - read register (hex or dec)");
+  Serial.println("  w <addr> <val>       - write register (hex or dec)");
+  Serial.println("  poll on|off          - enable/disable 1s polling");
+  Serial.println("  list                 - list poll registers");
+}
+
+static const char* skip_ws(const char* s) {
+  while (s && *s && isspace((unsigned char)*s)) ++s;
+  return s;
+}
+
+static bool parse_u32(const char* s, uint32_t* out) {
+  if (!s || !out) return false;
+  s = skip_ws(s);
+  if (!*s) return false;
+  char* endp = nullptr;
+  unsigned long v = strtoul(s, &endp, 0);
+  if (endp == s) return false;
+  *out = (uint32_t)v;
+  return true;
+}
+
+static void handle_command(const char* line) {
+  if (!line) return;
+  const char* s = skip_ws(line);
+  if (!*s) return;
+
+  if (strncmp(s, "help", 4) == 0) {
+    print_help();
+    return;
+  }
+  if (strncmp(s, "poll", 4) == 0) {
+    s = skip_ws(s + 4);
+    if (strncmp(s, "on", 2) == 0) {
+      g_poll_enabled = true;
+      Serial.println("Polling: ON");
+    } else if (strncmp(s, "off", 3) == 0) {
+      g_poll_enabled = false;
+      Serial.println("Polling: OFF");
+    } else {
+      Serial.println("Usage: poll on|off");
+    }
+    return;
+  }
+  if (strncmp(s, "list", 4) == 0) {
+    Serial.print("Poll regs:");
+    for (size_t i = 0; i < g_poll_regs_count; i++) {
+      uint16_t reg = g_poll_regs[i];
+      Serial.print(" 0x");
+      if (reg < 0x100) Serial.print('0');
+      if (reg < 0x010) Serial.print('0');
+      Serial.print(reg, HEX);
+    }
+    Serial.println();
+    return;
+  }
+  if (s[0] == 'r' && isspace((unsigned char)s[1])) {
+    uint32_t addr = 0;
+    if (!parse_u32(s + 1, &addr)) {
+      Serial.println("Usage: r <addr>");
+      return;
+    }
+    uint8_t val = spi_test_read_reg((uint16_t)addr);
+    Serial.print("reg 0x");
+    if (addr < 0x10) Serial.print('0');
+    Serial.print((uint16_t)addr, HEX);
+    Serial.print(" = 0x");
+    print_hex8(val);
+    Serial.println();
+    return;
+  }
+  if (s[0] == 'w' && isspace((unsigned char)s[1])) {
+    uint32_t addr = 0;
+    uint32_t val = 0;
+    if (!parse_u32(s + 1, &addr)) {
+      Serial.println("Usage: w <addr> <val>");
+      return;
+    }
+    const char* next = strchr(s + 1, ' ');
+    if (!next || !parse_u32(next, &val)) {
+      Serial.println("Usage: w <addr> <val>");
+      return;
+    }
+    spi_test_write_reg((uint16_t)addr, (uint8_t)val);
+    Serial.print("wrote 0x");
+    print_hex8((uint8_t)val);
+    Serial.print(" to reg 0x");
+    if (addr < 0x10) Serial.print('0');
+    Serial.print((uint16_t)addr, HEX);
+    Serial.println();
+    return;
+  }
+
+  Serial.println("Unknown command. Type 'help'.");
+}
+
+static void poll_serial_commands() {
+  static char buf[64];
+  static size_t idx = 0;
+
+  while (Serial.available() > 0) {
+    int c = Serial.read();
+    if (c == '\r') continue;
+    if (c == '\n') {
+      buf[idx] = '\0';
+      if (idx > 0) {
+        g_poll_enabled = false; // pause polling during command mode
+        handle_command(buf);
+      }
+      idx = 0;
+      continue;
+    }
+    if (idx + 1 < sizeof(buf)) {
+      buf[idx++] = (char)c;
+    }
+  }
+}
 
 void setup() {
   Serial.begin(115200);
@@ -44,6 +168,7 @@ void setup() {
   // Ensure SDO is enabled for reliable readback.
   uint8_t reg0 = spi_test_read_reg(SPI_TEST_REG_SOFTCTL);
   spi_test_write_reg(SPI_TEST_REG_SOFTCTL, (uint8_t)(reg0 | g_sdo_active_mask | g_addrinc_mask));
+  delay(5);
 
   Serial.println("\nReading a few registers:");
   bool all_ok = true;
@@ -91,16 +216,32 @@ void setup() {
   }
 
   Serial.println("\nSetup complete.");
+  print_help();
 }
 
 void loop() {
   static uint32_t last_ms = 0;
 
-  if (millis() - last_ms > 1000) {
+  poll_serial_commands();
+
+  if (g_poll_enabled && (millis() - last_ms > 1000)) {
     last_ms = millis();
-    uint8_t r0 = spi_test_read_reg(SPI_TEST_REG_SOFTCTL);
-    Serial.print("[1s] reg 0x000 = 0x");
-    print_hex8(r0);
-    Serial.println();
+    bool all_ok = true;
+    Serial.print("[1s] regs:");
+    for (size_t i = 0; i < g_poll_regs_count; i++) {
+      uint16_t reg = g_poll_regs[i];
+      uint8_t val = spi_test_read_reg(reg);
+      Serial.print(" 0x");
+      if (reg < 0x100) Serial.print('0');
+      if (reg < 0x010) Serial.print('0');
+      Serial.print(reg, HEX);
+      Serial.print("=");
+      print_hex8(val);
+      if (val == 0xFF || val == 0x00) {
+        all_ok = false;
+      }
+    }
+    Serial.print(" | ");
+    Serial.println(all_ok ? "VALID" : "INVALID");
   }
 }

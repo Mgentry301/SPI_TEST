@@ -32,6 +32,8 @@ extern uint8_t g_spi_write_flag;
 extern uint8_t g_spi_read_dummy_bytes;
 extern const uint16_t* g_test_regs;
 extern size_t g_test_regs_count;
+extern const uint16_t* g_poll_regs;
+extern size_t g_poll_regs_count;
 extern bool g_use_scratchpad;
 extern uint16_t g_rw_reg;
 
