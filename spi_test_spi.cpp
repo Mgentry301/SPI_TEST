@@ -5,74 +5,69 @@
 #include "spi_test_config.h"
 #include "spi_test_utils.h"
 
-uint8_t spi_test_read_reg(uint16_t reg12) {
-  digitalWrite(g_cs_pin, LOW);
+static inline uint16_t mask_reg12(uint16_t reg) {
+  return (uint16_t)(reg & 0x0FFFu);
+}
 
-  if (g_spi_protocol == 1) {
-    // AD9082-style address phase with read flag in the first address byte.
-    if (g_spi_addr_bytes == 2) {
-      uint8_t msb = (uint8_t)((reg12 >> 8) & 0xFFu);
-      uint8_t lsb = (uint8_t)(reg12 & 0xFFu);
-      msb = (uint8_t)(msb | g_spi_read_flag);
-      SPI.transfer(msb);
-      SPI.transfer(lsb);
-    } else {
-      uint8_t b2 = (uint8_t)((reg12 >> 16) & 0xFFu);
-      uint8_t b1 = (uint8_t)((reg12 >> 8) & 0xFFu);
-      uint8_t b0 = (uint8_t)(reg12 & 0xFFu);
-      b2 = (uint8_t)(b2 | g_spi_read_flag);
-      SPI.transfer(b2);
-      SPI.transfer(b1);
-      SPI.transfer(b0);
-    }
-    for (uint8_t i = 0; i < g_spi_read_dummy_bytes; ++i) {
-      SPI.transfer(0x00);
-    }
-  } else {
-    // ADMV1455/ADMV1355-style 16-bit header: [15]=R/W, [14]=BR, [13:12]=CHIP_ADDR, [11:0]=REG
-    uint16_t header = 0;
-    header |= (1u << 15);
-    header |= ((g_chip_addr & 0x3) << 12);
-    header |= (reg12 & 0x0FFF);
-    SPI.transfer((uint8_t)(header >> 8));
-    SPI.transfer((uint8_t)(header & 0xFF));
+static inline uint8_t mask_chip_addr2(uint8_t chip_addr) {
+  return (uint8_t)(chip_addr & 0x03u);
+}
+
+// Datasheet header: [15]=R/W, [14]=BR, [13:12]=CHIP_ADDR, [11:0]=REG_ADDR
+static inline uint16_t make_header(bool is_read, bool br, uint8_t chip_addr, uint16_t reg12) {
+  const uint16_t rw_bit = (uint16_t)(is_read ? 1u : 0u) << 15;
+  const uint16_t br_bit = (uint16_t)(br ? 1u : 0u) << 14;
+  const uint16_t ca_bits = (uint16_t)(mask_chip_addr2(chip_addr)) << 12;
+  const uint16_t ra_bits = mask_reg12(reg12);
+  return (uint16_t)(rw_bit | br_bit | ca_bits | ra_bits);
+}
+
+static inline void cs_low() {
+  digitalWrite(g_cs_pin, LOW);
+}
+
+static inline void cs_high() {
+  digitalWrite(g_cs_pin, HIGH);
+  if (g_cs_post_us > 0) {
+    delayMicroseconds(g_cs_post_us);
   }
+}
+
+static inline void spi_begin_txn() {
+  SPI.beginTransaction(SPISettings(g_spi_hz, MSBFIRST, g_spi_mode));
+}
+
+static inline void spi_end_txn() {
+  SPI.endTransaction();
+}
+
+uint8_t spi_test_read_reg(uint16_t reg12) {
+  spi_begin_txn();
+  cs_low();
+
+  // ADMV1455 16-bit header: [15]=R/W, [14]=BR, [13:12]=CHIP_ADDR, [11:0]=REG
+  const uint16_t header = make_header(true /*read*/, false /*br*/, g_chip_addr, reg12);
+  SPI.transfer((uint8_t)((header >> 8) & 0xFFu));
+  SPI.transfer((uint8_t)(header & 0xFFu));
 
   uint8_t val = SPI.transfer(0x00);
-  digitalWrite(g_cs_pin, HIGH);
+  cs_high();
+  spi_end_txn();
 
   return val;
 }
 
 void spi_test_write_reg(uint16_t reg12, uint8_t data) {
-  digitalWrite(g_cs_pin, LOW);
+  spi_begin_txn();
+  cs_low();
 
-  if (g_spi_protocol == 1) {
-    if (g_spi_addr_bytes == 2) {
-      uint8_t msb = (uint8_t)((reg12 >> 8) & 0xFFu);
-      uint8_t lsb = (uint8_t)(reg12 & 0xFFu);
-      msb = (uint8_t)(msb | g_spi_write_flag);
-      SPI.transfer(msb);
-      SPI.transfer(lsb);
-    } else {
-      uint8_t b2 = (uint8_t)((reg12 >> 16) & 0xFFu);
-      uint8_t b1 = (uint8_t)((reg12 >> 8) & 0xFFu);
-      uint8_t b0 = (uint8_t)(reg12 & 0xFFu);
-      b2 = (uint8_t)(b2 | g_spi_write_flag);
-      SPI.transfer(b2);
-      SPI.transfer(b1);
-      SPI.transfer(b0);
-    }
-  } else {
-    uint16_t header = 0;
-    header |= ((g_chip_addr & 0x3) << 12);
-    header |= (reg12 & 0x0FFF);
-    SPI.transfer((uint8_t)(header >> 8));
-    SPI.transfer((uint8_t)(header & 0xFF));
-  }
+  const uint16_t header = make_header(false /*write*/, false /*br*/, g_chip_addr, reg12);
+  SPI.transfer((uint8_t)((header >> 8) & 0xFFu));
+  SPI.transfer((uint8_t)(header & 0xFFu));
 
   SPI.transfer(data);
-  digitalWrite(g_cs_pin, HIGH);
+  cs_high();
+  spi_end_txn();
 }
 
 void spi_test_write_readback(uint16_t reg12, uint8_t value) {

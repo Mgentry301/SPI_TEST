@@ -1,16 +1,14 @@
 # SPI_TEST
 
 Minimal SPI connectivity test for Linduino (DC2026) to validate communication with:
-- ADMV1455 (minimal)
-- ADMV1355 (minimal)
-- AD9082 (minimal)
+- ADMV1455 (register 0x00A)
 
 This sketch is intentionally simple and only verifies SPI wiring, chip select, and basic register read/write behavior. Full device bring-up and programming live in the part-specific projects.
 
 ## Hardware
 
 - Linduino One (DC2026)
-- One of the supported DUTs on an evaluation board or custom PCB
+- ADMV1455 on an evaluation board or custom PCB
 - USB cable for programming and serial output
 
 ### QuikEval SPI Pinout
@@ -29,30 +27,17 @@ Note: The QuikEval MUX pin (Linduino D8) must be LOW for SPI mode. The sketch dr
 ## Files
 
 - SPI_TEST.ino: Main sketch (setup/loop)
-- spi_test_config.h/.cpp: Preset selection and per-device config
+- spi_test_config.h/.cpp: ADMV1455 config
 - spi_test_spi.h/.cpp: SPI read/write helpers
 - spi_test_utils.h: Small print helpers
-
-## Select the DUT
-
-Edit the preset at the top of SPI_TEST.ino:
-
-```cpp
-#define SPI_TEST_INIT_PRESET SPI_TEST_PRESET_ADMV1455_MINIMAL
-// or
-// #define SPI_TEST_INIT_PRESET SPI_TEST_PRESET_ADMV1355_MINIMAL
-// #define SPI_TEST_INIT_PRESET SPI_TEST_PRESET_AD9082_MINIMAL
-```
 
 ## What It Does
 
 - Enables SPI mode on the QuikEval connector
 - Sets up SPI with safe defaults (1 MHz, Mode 0)
 - Enables SDO for readback
-- Reads a small set of safe registers
-- Performs a safe write/readback test
-  - ADMV1455/ADMV1355: scratchpad register
-  - AD9082: SPI interface config register
+- Reads register 0x00A
+- Performs a safe write/readback test on register 0x00A
 
 ## Build and Run
 
@@ -65,98 +50,19 @@ Edit the preset at the top of SPI_TEST.ino:
 ## Expected Output (Example)
 
 ```
-SPI_TEST: Minimal SPI Bring-up
-Preset: ADMV1455_MINIMAL
-Preset applied: ADMV1455_MINIMAL
+SPI_TEST: ADMV1455 SPI Bring-up (reg 0x00A)
 SPI Hz: 1000000
 SPI Mode: 0
 CHIP_ADDR: 0
 CS pin: 10
 ...
-Reading a few registers:
-  reg 0x000 = 0x..
-  reg 0x005 = 0x..
-...
+Reading register 0x00A:
+  reg 0x00A = 0x..
 Register readback status: VALID
-Write/readback test on scratchpad register:
+Write/readback test on register 0x00A:
   reg 0x00A write 0x5A read 0x5A
   reg 0x00A write 0xA5 read 0xA5
-Scratchpad write/readback: VALID (if no [MISMATCH])
-Setup complete.
-```
-
-## Preset Examples
-
-### ADMV1455_MINIMAL
-
-```
-SPI_TEST: Minimal SPI Bring-up
-Preset: ADMV1455_MINIMAL
-Preset applied: ADMV1455_MINIMAL
-SPI Hz: 1000000
-SPI Mode: 0
-CHIP_ADDR: 0
-CS pin: 10
-...
-Reading a few registers:
-  reg 0x000 = 0x..
-  reg 0x005 = 0x..
-  reg 0x012 = 0x..
-  reg 0x040 = 0x..
-  reg 0x050 = 0x..
-Register readback status: VALID
-Write/readback test on scratchpad register:
-  reg 0x00A write 0x5A read 0x5A
-  reg 0x00A write 0xA5 read 0xA5
-Scratchpad write/readback: VALID (if no [MISMATCH])
-Setup complete.
-```
-
-### ADMV1355_MINIMAL
-
-```
-SPI_TEST: Minimal SPI Bring-up
-Preset: ADMV1355_MINIMAL
-Preset applied: ADMV1355_MINIMAL
-SPI Hz: 1000000
-SPI Mode: 0
-CHIP_ADDR: 0
-CS pin: 10
-...
-Reading a few registers:
-  reg 0x000 = 0x..
-  reg 0x001 = 0x..
-  reg 0x003 = 0x..
-  reg 0x004 = 0x..
-  reg 0x005 = 0x..
-Register readback status: VALID
-Write/readback test on scratchpad register:
-  reg 0x00A write 0x5A read 0x5A
-  reg 0x00A write 0xA5 read 0xA5
-Scratchpad write/readback: VALID (if no [MISMATCH])
-Setup complete.
-```
-
-### AD9082_MINIMAL
-
-```
-SPI_TEST: Minimal SPI Bring-up
-Preset: AD9082_MINIMAL
-Preset applied: AD9082_MINIMAL
-SPI Hz: 1000000
-SPI Mode: 0
-CHIP_ADDR: 0
-CS pin: 10
-...
-Reading a few registers:
-  reg 0x0000 = 0x..
-  reg 0x0001 = 0x..
-  reg 0x0002 = 0x..
-  reg 0x0003 = 0x..
-Register readback status: VALID
-Write/readback test on SPI config register:
-  reg 0x0000 write 0x.. read 0x..
-SPI config write/readback status: VALID
+Register 0x00A write/readback: VALID (if no [MISMATCH])
 Setup complete.
 ```
 
