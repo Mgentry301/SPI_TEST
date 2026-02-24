@@ -12,30 +12,6 @@ void print_hex8(uint8_t val) {
   Serial.print(val, HEX);
 }
 
-// MOSI→MISO loopback self-test.
-// Temporarily disconnects CS so the device ignores traffic,
-// then clocks out test bytes and checks that MISO returns them.
-// Requires a physical jumper from MOSI (pin 11) to MISO (pin 12).
-bool spi_loopback_test() {
-  const uint8_t patterns[] = {0x55, 0xAA, 0xFF, 0x00, 0xA5};
-  bool pass = true;
-  SPI.beginTransaction(SPISettings(g_spi_hz, MSBFIRST, g_spi_mode));
-  output_high(g_cs_pin);                       // keep CS high — no device interaction
-  for (uint8_t i = 0; i < sizeof(patterns); i++) {
-    uint8_t rx = SPI.transfer(patterns[i]);
-    Serial.print(F("  TX=0x")); print_hex8(patterns[i]);
-    Serial.print(F(" RX=0x")); print_hex8(rx);
-    if (rx == patterns[i]) {
-      Serial.println(F(" [OK]"));
-    } else {
-      Serial.println(F(" [FAIL]"));
-      pass = false;
-    }
-  }
-  SPI.endTransaction();
-  return pass;
-}
-
 // ADMV1455 SPI frame: 24 bits, clocked MSB-first
 //   Byte 0 (first on wire): header[15:8]  — R/W, BR, CHIP_ADDR[1:0], REG[11:8]
 //   Byte 1:                  header[7:0]   — REG[7:0]

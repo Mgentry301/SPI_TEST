@@ -40,12 +40,6 @@ void setup() {
     Serial.println(F("  WARNING: MISO LOW - check wiring"));
   }
 
-  // SPI loopback self-test (jumper MOSI pin 11 → MISO pin 12 to run)
-  Serial.println(F("\nSPI loopback test (needs MOSI->MISO jumper):"));
-  bool loopback_ok = spi_loopback_test();
-  Serial.print(F("Loopback: "));
-  Serial.println(loopback_ok ? F("PASS") : F("FAIL"));
-
   // Enable SDO_ACTIVE for 4-wire SPI on ADMV1455.
   // By default, SDO is disabled (3-wire mode) — the chip responds on SDIO, not SDO.
   // We must write blindly since we can't verify via SDO until it's enabled.

@@ -27,9 +27,8 @@ Note: The QuikEval MUX pin (Linduino D8) must be LOW for SPI mode. The sketch dr
 ## Files
 
 - SPI_TEST.ino: Main sketch (setup/loop)
-- spi_test_config.h/.cpp: ADMV1455 config
+- spi_test_config.h/.cpp: ADMV1455 config (hardcoded CHIP_ADDR=3)
 - spi_test_spi.h/.cpp: SPI read/write helpers
-- spi_test_utils.h: Small print helpers
 
 ## What It Does
 
@@ -53,7 +52,7 @@ Note: The QuikEval MUX pin (Linduino D8) must be LOW for SPI mode. The sketch dr
 SPI_TEST: ADMV1455 SPI Bring-up (reg 0x00A)
 SPI Hz: 1000000
 SPI Mode: 0
-CHIP_ADDR: 0
+CHIP_ADDR: 3
 CS pin: 10
 QuikEval GPIO pin: 9
 QuikEval MUX pin: 8
@@ -61,21 +60,6 @@ MUX pin state after setup: LOW (SPI mode)
 
 Hardware diagnostic:
   MISO pin (before SPI): HIGH
-
-SPI loopback test (needs MOSI->MISO jumper):
-  TX=0x55 RX=0x55 [OK]
-  TX=0xAA RX=0xAA [OK]
-  TX=0xFF RX=0xFF [OK]
-  TX=0x00 RX=0x00 [OK]
-  TX=0xA5 RX=0xA5 [OK]
-Loopback: PASS
-
-Addr scan (0-3):
-  ADDR 0 -> 0x00 [0x00]
-  ADDR 1 -> 0x00 [0x00]
-  ADDR 2 -> 0x00 [0x00]
-  ADDR 3 -> 0x18 [MATCH]
-Detected addr: 3
 
 Enabling SDO_ACTIVE (0x18 -> reg 0x000)...
   reg 0x000 rb: 0x18 [OK]
