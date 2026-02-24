@@ -3,14 +3,6 @@
 #include <Linduino.h>
 #include <LT_SPI.h>
 
-// ── Preset selector ──────────────────────────────────────
-// Uncomment ONE of the following to choose a preset:
-//   PRESET_ADDR3     — hardcoded CHIP_ADDR=3 (known-good board)
-//   PRESET_ADDR_SCAN — scans all 4 addresses at startup
-// This overrides the default in spi_test_config.h.
-// #undef  SPI_TEST_PRESET
- #define SPI_TEST_PRESET  PRESET_ADDR_SCAN
-
 #include "spi_test_config.h"
 #include "spi_test_spi.h"
 
@@ -58,12 +50,6 @@ void setup() {
   // By default, SDO is disabled (3-wire mode) — the chip responds on SDIO, not SDO.
   // We must write blindly since we can't verify via SDO until it's enabled.
   // 0x18 = bit 4 (SDO_ACTIVE_R) + bit 3 (SDO_ACTIVE) → enable 4-wire SPI.
-#if SPI_TEST_PRESET == PRESET_ADDR_SCAN
-  int8_t detected = spi_scan_chip_addr();
-  if (detected < 0) {
-    Serial.println(F("WARNING: No chip found. Using default."));
-  }
-#endif
   Serial.println(F("\nEnabling SDO_ACTIVE (0x18 -> reg 0x000)..."));
   spi_test_write_reg(SPI_TEST_REG_SOFTCTL, 0x18);
   delay(10);

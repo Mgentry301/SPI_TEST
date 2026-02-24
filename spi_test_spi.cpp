@@ -68,43 +68,6 @@ void spi_test_write_reg(uint16_t reg, uint8_t data) {
   SPI.endTransaction();
 }
 
-// Scan CHIP_ADDR 0-3: write SDO_ACTIVE, then readback.
-// Returns first address with valid response, or -1.
-int8_t spi_scan_chip_addr() {
-  uint8_t saved_addr = g_chip_addr;
-  int8_t found = -1;
-
-  Serial.println(F("\nAddr scan (0-3):"));
-  for (uint8_t addr = 0; addr < 4; addr++) {
-    g_chip_addr = addr;
-    spi_test_write_reg(SPI_TEST_REG_SOFTCTL, g_sdo_active_mask);
-    delay(5);
-    uint8_t rb = spi_test_read_reg(SPI_TEST_REG_SOFTCTL);
-    Serial.print(F("  ADDR ")); Serial.print(addr);
-    Serial.print(F(" -> 0x")); print_hex8(rb);
-    if (rb == g_sdo_active_mask) {
-      Serial.println(F(" [MATCH]"));
-      if (found < 0) found = (int8_t)addr;
-    } else if (rb == 0xFF) {
-      Serial.println(F(" [0xFF]"));
-    } else if (rb == 0x00) {
-      Serial.println(F(" [0x00]"));
-    } else {
-      Serial.print(F(" [?0x")); print_hex8(rb); Serial.println(F("]"));
-      if (found < 0) found = (int8_t)addr;
-    }
-  }
-
-  if (found >= 0) {
-    g_chip_addr = (uint8_t)found;
-    Serial.print(F("Detected addr: ")); Serial.println(found);
-  } else {
-    g_chip_addr = saved_addr;
-    Serial.println(F("No chip responded."));
-  }
-  return found;
-}
-
 void spi_test_write_readback(uint16_t reg, uint8_t value) {
   spi_test_write_reg(reg, value);
   uint8_t rb = spi_test_read_reg(reg);

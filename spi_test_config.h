@@ -4,15 +4,6 @@
 #include <SPI.h>
 #include <stddef.h>
 
-// ── Preset selector ──────────────────────────────────────────
-// Change this line to switch presets:
-//   PRESET_ADDR3       — hardcoded CHIP_ADDR=3 (known-good board)
-//   PRESET_ADDR_SCAN   — scans all 4 addresses at startup
-//#define SPI_TEST_PRESET  PRESET_ADDR3
-
-#define PRESET_ADDR3      0
-#define PRESET_ADDR_SCAN  1
-
 // ── Register map ─────────────────────────────────────────────
 #define SPI_TEST_REG_SOFTCTL      0x000
 #define SPI_TEST_REG_SCRATCHPAD_A 0x00A

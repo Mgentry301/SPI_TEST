@@ -55,15 +55,45 @@ SPI Hz: 1000000
 SPI Mode: 0
 CHIP_ADDR: 0
 CS pin: 10
-...
-Reading register 0x00A:
-  reg 0x00A = 0x..
-Register readback status: VALID
-Write/readback test on register 0x00A:
-  reg 0x00A write 0x5A read 0x5A
-  reg 0x00A write 0xA5 read 0xA5
-Register 0x00A write/readback: VALID (if no [MISMATCH])
+QuikEval GPIO pin: 9
+QuikEval MUX pin: 8
+MUX pin state after setup: LOW (SPI mode)
+
+Hardware diagnostic:
+  MISO pin (before SPI): HIGH
+
+SPI loopback test (needs MOSI->MISO jumper):
+  TX=0x55 RX=0x55 [OK]
+  TX=0xAA RX=0xAA [OK]
+  TX=0xFF RX=0xFF [OK]
+  TX=0x00 RX=0x00 [OK]
+  TX=0xA5 RX=0xA5 [OK]
+Loopback: PASS
+
+Addr scan (0-3):
+  ADDR 0 -> 0x00 [0x00]
+  ADDR 1 -> 0x00 [0x00]
+  ADDR 2 -> 0x00 [0x00]
+  ADDR 3 -> 0x18 [MATCH]
+Detected addr: 3
+
+Enabling SDO_ACTIVE (0x18 -> reg 0x000)...
+  reg 0x000 rb: 0x18 [OK]
+
+Reading reg 0x00A:
+  reg 0x0A = 0x.. 
+Readback: VALID
+
+Write/readback reg 0x00A:
+  reg 0x0A W:0x5A R:0x5A
+  reg 0x0A W:0xA5 R:0xA5
+  reg 0x0A W:0xFF R:0xFF
+  reg 0x0A W:0x00 R:0x00
+W/R done (check for [MISMATCH])
+
 Setup complete.
+
+[5s] regs: 0x00A=.. | VALID
 ```
 
 ## Notes

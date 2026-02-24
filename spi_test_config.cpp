@@ -29,28 +29,9 @@ static void apply_common() {
   g_poll_regs_count = sizeof(admv1455_poll) / sizeof(admv1455_poll[0]);
 }
 
-// ── Preset: hardcoded CHIP_ADDR = 3 ─────────────────────────
-static void preset_addr3() {
+void apply_spi_preset() {
   apply_common();
   g_chip_addr = 3;
-}
-
-// ── Preset: scan all addresses at startup ────────────────────
-//    g_chip_addr is set to 0 initially; the scan in setup() will
-//    overwrite it with the detected address.
-static void preset_addr_scan() {
-  apply_common();
-  g_chip_addr = 0;  // placeholder — scan will update
-}
-
-void apply_spi_preset() {
-#if SPI_TEST_PRESET == PRESET_ADDR3
-  preset_addr3();
-#elif SPI_TEST_PRESET == PRESET_ADDR_SCAN
-  preset_addr_scan();
-#else
-  #error "Unknown SPI_TEST_PRESET value"
-#endif
 }
 
 uint8_t spi_mode_to_int(uint8_t mode) {
